@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import { getAssignedCustomModules } from '@/lib/queries/customContent'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import ProgressBar from '@/components/shared/ProgressBar'
 
 interface ClassCardData {
   id: string
@@ -11,6 +12,7 @@ interface ClassCardData {
   icon: string
   color: string
   sectionCount: number
+  percent: number
 }
 
 function colorToHex(colorClasses: string): string {
@@ -26,15 +28,32 @@ export default function ClassScreen() {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const modules = await getAssignedCustomModules(supabase)
+      const userId = session?.user.id
+      if (!userId) return
+
+      const [modules, { data: learnRows }] = await Promise.all([
+        getAssignedCustomModules(supabase),
+        supabase.from('learn_progress').select('module_id, item_id').eq('student_id', userId),
+      ])
       if (cancelled) return
-      setCards(modules.map((mod) => ({
-        id: mod.id,
-        title: mod.title,
-        icon: mod.icon,
-        color: mod.color,
-        sectionCount: mod.subModules.length,
-      })))
+
+      function moduleProgress(moduleId: string, totalItems: number): number {
+        if (totalItems === 0) return 0
+        const viewed = learnRows?.filter((r) => r.module_id === moduleId).length ?? 0
+        return Math.round((viewed / totalItems) * 100)
+      }
+
+      setCards(modules.map((mod) => {
+        const totalItems = mod.subModules.reduce((sum, sm) => sum + sm.items.length, 0)
+        return {
+          id: mod.id,
+          title: mod.title,
+          icon: mod.icon,
+          color: mod.color,
+          sectionCount: mod.subModules.length,
+          percent: moduleProgress(mod.id, totalItems),
+        }
+      }))
     }
     load()
     return () => { cancelled = true }
@@ -60,12 +79,15 @@ export default function ClassScreen() {
             <Pressable
               key={card.id}
               onPress={() => router.push({ pathname: '/modules/[moduleId]', params: { moduleId: card.id, source: 'custom' } })}
-              className="w-[47%] rounded-2xl p-4 gap-2"
+              className="w-[47%] rounded-2xl p-4"
               style={{ backgroundColor: colorToHex(card.color) }}
             >
               <Text className="text-3xl">{card.icon}</Text>
-              <Text className="text-white font-extrabold text-base">{card.title}</Text>
-              <Text className="text-white/80 text-xs">{card.sectionCount} sections</Text>
+              <Text className="text-white font-extrabold text-base mt-2">{card.title}</Text>
+              <View className="mt-auto pt-3 gap-1.5">
+                <ProgressBar percent={card.percent} trackClassName="bg-white/30" fillClassName="bg-white" showLabel={false} />
+                <Text className="text-white/80 text-xs">{card.sectionCount} sections</Text>
+              </View>
             </Pressable>
           ))}
         </View>

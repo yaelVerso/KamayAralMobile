@@ -9,7 +9,7 @@ export default function StudentLayout() {
   if (!session) return <Redirect href="/login" />
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: '#0BC2D7' }}>
       {/* (home) is its own nested Stack (dashboard + module detail/learn/
           activity/quiz) — re-tapping this tab while already on it pops that
           stack back to the dashboard, instead of leaving old screens behind. */}

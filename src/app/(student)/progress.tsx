@@ -4,6 +4,7 @@ import { getAssignedCustomModules } from '@/lib/queries/customContent'
 import { getAllAdminModulesWithContent, getTeacherIdForStudent } from '@/lib/queries/adminContent'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import ProgressBar from '@/components/shared/ProgressBar'
 
 interface AttemptRow {
   submodule_id: string
@@ -98,12 +99,12 @@ export default function ProgressScreen() {
           const isOpen = expanded.has(section.id)
           return (
             <View key={section.id} className="rounded-2xl border border-gray-200 overflow-hidden">
-              <Pressable onPress={() => toggle(section.id)} className="flex-row items-center gap-3 p-4">
-                <Text className="text-2xl">{section.icon}</Text>
-                <Text className="flex-1 font-bold text-brand-brown">{section.title}</Text>
-                <View className="h-9 w-9 rounded-full border-4 border-[#0BC2D7] items-center justify-center">
-                  <Text className="text-[10px] font-bold text-[#0BC2D7]">{section.percent}%</Text>
+              <Pressable onPress={() => toggle(section.id)} className="gap-2.5 p-4">
+                <View className="flex-row items-center gap-3">
+                  <Text className="text-2xl">{section.icon}</Text>
+                  <Text className="flex-1 font-bold text-brand-brown">{section.title}</Text>
                 </View>
+                <ProgressBar percent={section.percent} />
               </Pressable>
               {isOpen && (
                 <View className="px-4 pb-4 gap-2">

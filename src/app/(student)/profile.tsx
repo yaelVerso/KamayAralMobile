@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Switch } from 're
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { readBooleanSetting, writeBooleanSetting, VIDEO_MANUAL_PLAY_STORAGE_KEY } from '@/lib/settings'
+import ChangePasswordForm from '@/components/shared/ChangePasswordForm'
 
 interface StudentInfo {
   full_name: string | null
@@ -97,7 +98,14 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <Pressable onPress={signOut} className="rounded-xl bg-red-600 py-3.5 items-center mt-2">
+        <View>
+          <Text className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Security</Text>
+          <View className="rounded-xl border border-gray-200 p-4">
+            <ChangePasswordForm />
+          </View>
+        </View>
+
+        <Pressable onPress={signOut} className="rounded-xl bg-[#E14E4E] py-3.5 items-center mt-2">
           <Text className="text-white font-bold">Log Out</Text>
         </Pressable>
       </View>

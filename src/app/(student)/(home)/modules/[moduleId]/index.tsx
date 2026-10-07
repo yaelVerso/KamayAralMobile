@@ -77,7 +77,7 @@ export default function ModuleDetailScreen() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      <Stack.Screen options={{ headerShown: true, title: mod.title }} />
+      <Stack.Screen options={{ headerShown: true, title: `${mod.icon} ${mod.title}` }} />
       <View className="px-4 pt-4 pb-2">
         <Text className="text-sm text-gray-500">{mod.description}</Text>
       </View>
