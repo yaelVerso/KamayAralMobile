@@ -33,7 +33,7 @@ export default function SignVideo({ videoPath, play = true }: Props) {
   })
 
   if (isYoutube && parsed.id) {
-    return <YoutubePlayer videoId={parsed.id} play={play} loop mute />
+    return <YoutubePlayer videoId={parsed.id} play={play} loop mute controls={false} />
   }
 
   return <VideoView player={player} style={{ width: '100%', height: '100%' }} contentFit="contain" nativeControls={false} />

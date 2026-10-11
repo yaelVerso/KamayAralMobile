@@ -3,14 +3,13 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useEvent } from 'expo'
 import { useVideoPlayer, VideoView } from 'expo-video'
-import { type PLAYER_STATES } from 'react-native-youtube-iframe'
 import type { SignItem, SubModule } from '@/content/types'
 import { getModuleTreeBySource, type ContentSource } from '@/lib/moduleTree'
 import { parseVideoUrl } from '@/lib/videoEmbed'
 import { labelTextSize } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import YoutubePlayer from '@/components/shared/YoutubePlayer'
+import YoutubePlayer, { type PlayerStateName } from '@/components/shared/YoutubePlayer'
 
 const SPEEDS = [0.5, 0.75, 1] as const
 
@@ -107,7 +106,7 @@ export default function LearnScreen() {
     else player.play()
   }
 
-  function handleYoutubeStateChange(state: PLAYER_STATES) {
+  function handleYoutubeStateChange(state: PlayerStateName) {
     if (state === 'playing') setYtPlaying(true)
     if (state === 'paused') setYtPlaying(false)
   }
@@ -157,6 +156,7 @@ export default function LearnScreen() {
               play={ytPlaying}
               loop
               mute={false}
+              controls={false}
               playbackRate={playbackRate}
               onChangeState={handleYoutubeStateChange}
             />
