@@ -10,8 +10,17 @@ interface MatchResult {
   matchedLabel: string
 }
 
+// one color per pair slot, keyed by stable position in items, not display
+// order - mirrors the web app's DragDropMatch so a matched sign/picture pair
+// visibly share a color before the answer is locked in
+const PAIR_COLORS = [
+  { border: 'border-[#8B5CF6]', bg: 'bg-[#EDE6FB]', text: 'text-[#6D28D9]' },
+  { border: 'border-[#0BC2D7]', bg: 'bg-[#D5ECEF]', text: 'text-[#007B89]' },
+  { border: 'border-[#F472B6]', bg: 'bg-[#FCE7F3]', text: 'text-[#BE185D]' },
+]
+
 interface Props {
-  items: SignItem[] // exactly 3
+  items: SignItem[]
   mode: 'activity' | 'quiz'
   initialMatches?: Record<string, string> | null
   onAnswer: (results: MatchResult[]) => void
@@ -24,10 +33,15 @@ export default function DragDropMatch({ items, mode, initialMatches, onAnswer }:
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
   const [locked, setLocked] = useState(mode === 'activity' && !!initialMatches)
   const [saved, setSaved] = useState(mode === 'quiz' && !!initialMatches)
+  // Only the first tile autoplays — react-native-youtube-iframe can't
+  // reliably autoplay 3 simultaneous WebViews. The rest start on tap,
+  // backed by a real user gesture so it actually works.
+  const [playingIds, setPlayingIds] = useState<Set<string>>(() => new Set(videoOrder[0] ? [videoOrder[0].id] : []))
 
   function handleVideoTap(id: string) {
     if (locked) return
     setSelectedVideo((prev) => (prev === id ? null : id))
+    setPlayingIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
   }
 
   function handlePictureTap(pictureId: string) {
@@ -64,6 +78,11 @@ export default function DragDropMatch({ items, mode, initialMatches, onAnswer }:
   const allCorrect = locked && items.every((item) => matches[item.id] === item.id)
   const score = locked ? items.filter((item) => matches[item.id] === item.id).length : 0
 
+  function pairColor(itemId: string) {
+    const idx = items.findIndex((i) => i.id === itemId)
+    return PAIR_COLORS[idx % PAIR_COLORS.length]
+  }
+
   return (
     <View className="gap-4">
       <Text className="text-center text-sm font-semibold uppercase tracking-widest text-gray-400">
@@ -73,42 +92,65 @@ export default function DragDropMatch({ items, mode, initialMatches, onAnswer }:
         <Text className="text-center text-sm text-[#007B89] font-medium">Now tap the matching picture →</Text>
       )}
 
-      <View className="flex-row gap-3">
-        <View className="flex-1 gap-2">
+      <View className="flex-row gap-4">
+        <View className="flex-[1.4] gap-4">
           <Text className="text-xs font-semibold text-center text-gray-400 uppercase">Signs</Text>
           {videoOrder.map((item) => {
             const isSelected = selectedVideo === item.id
             const matchedPictureId = matches[item.id]
             const matchedItem = matchedPictureId ? items.find((i) => i.id === matchedPictureId) : null
             const isCorrect = locked && matchedPictureId === item.id
-            const borderColor = locked ? (isCorrect ? 'border-[#579F10]' : 'border-[#C61518]') : isSelected ? 'border-gray-500' : 'border-transparent'
+            const color = pairColor(item.id)
+            const borderColor = locked
+              ? isCorrect ? 'border-[#579F10]' : 'border-[#C61518]'
+              : isSelected ? 'border-gray-500' : matchedItem ? color.border : 'border-transparent'
             const bg = locked ? (isCorrect ? 'bg-[#D8F2BF]' : 'bg-[#FFDEDF]') : 'bg-black'
 
+            // Video and "select this tile" are split into separate tap
+            // targets (not one Pressable wrapping both): on Android, a
+            // Pressable claims the touch responder for its whole area, so
+            // when it wrapped the video too, taps almost never reached the
+            // WebView underneath — meaning YouTube's own play button (which
+            // does work when tapped directly, confirmed elsewhere in the
+            // app) never got a real touch here. The video now renders
+            // outside any Pressable so native taps reach it directly; the
+            // label strip below is its own Pressable for selection.
             return (
-              <Pressable key={item.id} onPress={() => handleVideoTap(item.id)} className={`rounded-xl overflow-hidden border-2 ${borderColor}`}>
+              <View key={item.id} className={`rounded-xl overflow-hidden border-2 ${borderColor}`}>
                 <View className={`aspect-video ${bg}`}>
-                  <SignVideo videoPath={item.videoPath} />
+                  <SignVideo videoPath={item.videoPath} play={playingIds.has(item.id)} />
                 </View>
-                {matchedItem && !locked && (
-                  <Text className="text-center text-xs font-semibold py-1 bg-gray-100">→ {matchedItem.label}</Text>
-                )}
-              </Pressable>
+                <Pressable
+                  onPress={() => handleVideoTap(item.id)}
+                  disabled={locked}
+                  className={`py-3 items-center ${isSelected ? 'bg-[#007B89]' : matchedItem && !locked ? color.bg : 'bg-gray-100'}`}
+                >
+                  <Text
+                    className={`text-center text-sm font-semibold ${
+                      isSelected ? 'text-white' : matchedItem && !locked ? color.text : 'text-gray-600'
+                    }`}
+                  >
+                    {matchedItem && !locked ? `→ ${matchedItem.label}` : isSelected ? 'Selected ✓' : 'Tap to select'}
+                  </Text>
+                </Pressable>
+              </View>
             )
           })}
         </View>
 
-        <View className="flex-1 gap-2">
+        <View className="flex-1 gap-4">
           <Text className="text-xs font-semibold text-center text-gray-400 uppercase">Pictures</Text>
           {pictureOrder.map((item) => {
             const matchedVideoId = Object.entries(matches).find(([, pId]) => pId === item.id)?.[0]
             const isMatched = matchedVideoId !== undefined
             const matchedCorrectly = locked && matches[item.id] === item.id
+            const color = matchedVideoId ? pairColor(matchedVideoId) : null
             const borderColor = locked
               ? matchedCorrectly ? 'border-[#579F10]' : isMatched ? 'border-[#C61518]' : 'border-gray-200'
-              : selectedVideo && !isMatched ? 'border-amber-400' : isMatched ? 'border-[#0BC2D7]' : 'border-gray-200'
+              : selectedVideo && !isMatched ? 'border-amber-400' : isMatched && color ? color.border : 'border-gray-200'
             const bg = locked
               ? matchedCorrectly ? 'bg-[#D8F2BF]' : isMatched ? 'bg-[#FFDEDF]' : 'bg-white'
-              : 'bg-white'
+              : isMatched && color ? color.bg : 'bg-white'
 
             return (
               <Pressable
@@ -117,7 +159,7 @@ export default function DragDropMatch({ items, mode, initialMatches, onAnswer }:
                 disabled={locked}
                 className={`aspect-video items-center justify-center rounded-xl border-2 p-2 ${borderColor} ${bg}`}
               >
-                <Text className="font-black text-brand-secondary text-center">{item.label}</Text>
+                <Text className="font-black text-brand-secondary text-center text-xl">{item.label}</Text>
               </Pressable>
             )
           })}
@@ -127,7 +169,7 @@ export default function DragDropMatch({ items, mode, initialMatches, onAnswer }:
       {locked && (
         <View className={`rounded-2xl p-4 items-center ${allCorrect ? 'bg-[#D8F2BF]' : 'bg-amber-100'}`}>
           <Text className={`font-bold text-base ${allCorrect ? 'text-[#579F10]' : 'text-amber-600'}`}>
-            {allCorrect ? '🎉 Perfect match!' : `${score}/3 correct`}
+            {allCorrect ? '🎉 Perfect match!' : `${score}/${items.length} correct`}
           </Text>
         </View>
       )}

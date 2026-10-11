@@ -10,7 +10,6 @@ import { parseVideoUrl } from '@/lib/videoEmbed'
 import { labelTextSize } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import { readBooleanSetting, VIDEO_MANUAL_PLAY_STORAGE_KEY } from '@/lib/settings'
 import YoutubePlayer from '@/components/shared/YoutubePlayer'
 
 const SPEEDS = [0.5, 0.75, 1] as const
@@ -25,19 +24,8 @@ export default function LearnScreen() {
   const [loading, setLoading] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [activeVariationId, setActiveVariationId] = useState<string | null>(null)
-  const [looping, setLooping] = useState(true)
   const [playbackRate, setPlaybackRate] = useState<(typeof SPEEDS)[number]>(1)
   const [ytPlaying, setYtPlaying] = useState(true)
-  // Default (false = autoplay) deliberately inverted from the web app's own
-  // default (true = manual-play) — mobile autoplay-by-default was an explicit
-  // ask during Phase 4, confirmed working; this setting just makes it a
-  // user-toggleable preference on top of that established default, not a
-  // straight port of the web default.
-  const [manualPlay, setManualPlay] = useState(false)
-
-  useEffect(() => {
-    readBooleanSetting(VIDEO_MANUAL_PLAY_STORAGE_KEY, false).then(setManualPlay)
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -69,24 +57,15 @@ export default function LearnScreen() {
   const isYoutube = parsedVideo?.source === 'youtube'
 
   const player = useVideoPlayer(!isYoutube && activeVideoUrl ? activeVideoUrl : null, (p) => {
-    p.loop = looping
+    p.loop = true
     p.playbackRate = playbackRate
-    if (!manualPlay) p.play()
+    p.play()
   })
 
   useEffect(() => {
     if (!player) return
-    player.loop = looping
     player.playbackRate = playbackRate
-  }, [player, looping, playbackRate])
-
-  // Covers the case where the manual-play setting is still loading from
-  // AsyncStorage when the player above is first created (see useVideoPlayer's
-  // setup callback, which only runs once per video source).
-  useEffect(() => {
-    if (!player || !manualPlay) return
-    player.pause()
-  }, [player, manualPlay])
+  }, [player, playbackRate])
 
   // Official documented pattern (expo docs: expo-video "Playing a video")
   // for reactive player state — hand-rolled addListener/useState here caused
@@ -96,9 +75,8 @@ export default function LearnScreen() {
   const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player?.playing ?? false })
   const isPaused = isYoutube ? !ytPlaying : !isPlaying
 
-  // New video (sign or variation switch) respects the manual-play setting,
-  // YouTube included.
-  useEffect(() => { setYtPlaying(!manualPlay) }, [activeVideoUrl, manualPlay])
+  // New video (sign or variation switch) always starts playing.
+  useEffect(() => { setYtPlaying(true) }, [activeVideoUrl])
 
   const markViewed = async (item: SignItem) => {
     const userId = session?.user.id
@@ -177,7 +155,7 @@ export default function LearnScreen() {
               key={activeVideoUrl}
               videoId={parsedVideo.id}
               play={ytPlaying}
-              loop={looping}
+              loop
               mute={false}
               playbackRate={playbackRate}
               onChangeState={handleYoutubeStateChange}
@@ -209,12 +187,6 @@ export default function LearnScreen() {
             )}
             <Pressable onPress={togglePause} className="h-9 w-9 rounded-full border border-gray-300 items-center justify-center">
               <Text>{isPaused ? '▶' : '⏸'}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setLooping((l) => !l)}
-              className={`h-9 w-9 rounded-full border items-center justify-center ${looping ? 'bg-[#007B89] border-[#007B89]' : 'border-gray-300'}`}
-            >
-              <Text className={looping ? 'text-white' : ''}>↻</Text>
             </Pressable>
             {SPEEDS.map((speed) => (
               <Pressable

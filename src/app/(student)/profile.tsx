@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Switch } from 'react-native'
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import { readBooleanSetting, writeBooleanSetting, VIDEO_MANUAL_PLAY_STORAGE_KEY } from '@/lib/settings'
 import ChangePasswordForm from '@/components/shared/ChangePasswordForm'
 
 interface StudentInfo {
@@ -16,7 +15,6 @@ export default function ProfileScreen() {
   const [student, setStudent] = useState<StudentInfo | null>(null)
   const [sectionName, setSectionName] = useState<string | null>(null)
   const [teacherName, setTeacherName] = useState<string | null>(null)
-  const [manualPlay, setManualPlay] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -24,13 +22,9 @@ export default function ProfileScreen() {
       const userId = session?.user.id
       if (!userId) return
 
-      const [{ data: studentRow }, manual] = await Promise.all([
-        supabase.from('students').select('full_name, id_number, section_id').eq('id', userId).single(),
-        readBooleanSetting(VIDEO_MANUAL_PLAY_STORAGE_KEY, false),
-      ])
+      const { data: studentRow } = await supabase.from('students').select('full_name, id_number, section_id').eq('id', userId).single()
       if (cancelled) return
       setStudent(studentRow)
-      setManualPlay(manual)
 
       if (studentRow?.section_id) {
         const { data: section } = await supabase.from('sections').select('name, teacher_id').eq('id', studentRow.section_id).single()
@@ -45,11 +39,6 @@ export default function ProfileScreen() {
     load()
     return () => { cancelled = true }
   }, [session?.user.id])
-
-  async function toggleManualPlay(value: boolean) {
-    setManualPlay(value)
-    await writeBooleanSetting(VIDEO_MANUAL_PLAY_STORAGE_KEY, value)
-  }
 
   if (!student) {
     return (
@@ -84,17 +73,6 @@ export default function ProfileScreen() {
             ) : (
               <Text className="text-sm text-gray-500">Not yet assigned to a section.</Text>
             )}
-          </View>
-        </View>
-
-        <View>
-          <Text className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Settings</Text>
-          <View className="rounded-xl border border-gray-200 p-4 flex-row items-center justify-between">
-            <View className="flex-1 pr-3">
-              <Text className="text-sm font-medium">Manual video play</Text>
-              <Text className="text-xs text-gray-500 mt-0.5">When on, videos wait for you to press play instead of starting automatically.</Text>
-            </View>
-            <Switch value={manualPlay} onValueChange={toggleManualPlay} />
           </View>
         </View>
 

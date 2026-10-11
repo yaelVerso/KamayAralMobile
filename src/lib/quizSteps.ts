@@ -13,23 +13,27 @@ export interface QuizStep {
 const QUIZ_SIGN_TO_PICTURE_COUNT = 5
 const QUIZ_SPELLING_COUNT = 4
 const QUIZ_DRAG_DROP_GROUP_COUNT = 2
+const QUIZ_DRAG_DROP_GROUP_SIZE = 3
 
 export function getQuizQuestionCount(submodule: SubModule): number {
-  const hasDragDrop = submodule.activitySequence.includes('drag-drop-match') && submodule.items.length >= 3
+  const hasDragDrop = submodule.activitySequence.includes('drag-drop-match') && submodule.items.length >= QUIZ_DRAG_DROP_GROUP_SIZE
   return QUIZ_SIGN_TO_PICTURE_COUNT + QUIZ_SPELLING_COUNT + (hasDragDrop ? QUIZ_DRAG_DROP_GROUP_COUNT : 0)
 }
 
 export function stepPoints(step: QuizStep): number {
   if (step.type === 'lesson-card') return 0
-  if (step.type === 'drag-drop-match') return step.groupItems?.length ?? 3
+  if (step.type === 'drag-drop-match') return step.groupItems?.length ?? QUIZ_DRAG_DROP_GROUP_SIZE
   return 1
 }
 
 // cycles through pool in order instead of random draw, so every student gets
-// the same items for a submodule — keeps section-wide data comparable
-function pickItemsCoveringAll(pool: SignItem[], count: number): SignItem[] {
+// the same items for a submodule — keeps section-wide data comparable.
+// startIndex lets callers continue from where an earlier pool left off
+// instead of every pool re-covering the same leading items, so submodules
+// bigger than a single pool still get full coverage across the whole quiz.
+function pickItemsCoveringAll(pool: SignItem[], count: number, startIndex = 0): SignItem[] {
   if (pool.length === 0) return []
-  return Array.from({ length: count }, (_, i) => pool[i % pool.length])
+  return Array.from({ length: count }, (_, i) => pool[(startIndex + i) % pool.length])
 }
 
 // fixed quiz shape: 5 sign-to-picture, 4 spelling, 2 drag-drop-match groups.
@@ -64,10 +68,14 @@ export function buildQuizSteps(submodule: SubModule): QuizStep[] {
     steps.push({ type: 'spelling', item, occurrence })
   }
 
-  if (hasDragDrop && submodule.items.length >= 3) {
-    const dragDropPool = pickItemsCoveringAll(submodule.items, QUIZ_DRAG_DROP_GROUP_COUNT * 3)
+  if (hasDragDrop && submodule.items.length >= QUIZ_DRAG_DROP_GROUP_SIZE) {
+    const dragDropPool = pickItemsCoveringAll(
+      submodule.items,
+      QUIZ_DRAG_DROP_GROUP_COUNT * QUIZ_DRAG_DROP_GROUP_SIZE,
+      QUIZ_SIGN_TO_PICTURE_COUNT + QUIZ_SPELLING_COUNT,
+    )
     for (let g = 0; g < QUIZ_DRAG_DROP_GROUP_COUNT; g++) {
-      const group = dragDropPool.slice(g * 3, g * 3 + 3)
+      const group = dragDropPool.slice(g * QUIZ_DRAG_DROP_GROUP_SIZE, g * QUIZ_DRAG_DROP_GROUP_SIZE + QUIZ_DRAG_DROP_GROUP_SIZE)
       const groupOccurrences = group.map((it) => nextOccurrence('drag-drop-match', it.id))
       steps.push({ type: 'drag-drop-match', item: group[0], groupItems: group, groupOccurrences })
     }

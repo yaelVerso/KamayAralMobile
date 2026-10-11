@@ -224,7 +224,9 @@ export default function QuizScreen() {
                     <View className="flex-1">
                       <Text className="font-semibold text-sm">{item?.label ?? a.item_id}</Text>
                       {!a.is_correct && (
-                        <Text className="text-xs text-gray-400">You answered: {a.answer_given || '—'}</Text>
+                        <Text className="text-xs text-gray-400">
+                          You answered: {(a.answer_given && itemById.get(a.answer_given)?.label) || a.answer_given || '—'}
+                        </Text>
                       )}
                     </View>
                     <Text className={a.is_correct ? 'text-[#579F10]' : 'text-[#C61518]'}>{a.is_correct ? '✓' : '✕'}</Text>

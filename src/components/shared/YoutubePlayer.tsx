@@ -1,6 +1,15 @@
 import { useState } from 'react'
-import { View, type LayoutChangeEvent } from 'react-native'
+import { View, Text, type LayoutChangeEvent } from 'react-native'
 import YoutubeIframe, { type PLAYER_STATES } from 'react-native-youtube-iframe'
+
+// Tapping the cued-thumbnail play button inside the embedded YouTube iframe
+// calls window.open(), which Android's WebView hands to onCreateWindow as a
+// popup - not a normal navigation, so onShouldStartLoadWithRequest never
+// sees it. react-native-webview only intercepts that popup (instead of
+// letting Android's OS-level verified-App-Link resolution hijack it straight
+// to the real YouTube app) when the app passes an onOpenWindow handler, so a
+// no-op one is enough to keep the tap inside the app.
+const PLAYER_BASE_URL = 'https://lonelycpp.github.io/react-native-youtube-iframe/iframe_v2.html'
 
 interface Props {
   videoId: string
@@ -36,7 +45,10 @@ export default function YoutubePlayer({ videoId, play, loop, mute, playbackRate,
           playbackRate={playbackRate}
           initialPlayerParams={{ loop, controls: false, rel: false, iv_load_policy: 3 }}
           onChangeState={onChangeState}
-          forceAndroidAutoplay
+          webViewProps={{
+            onShouldStartLoadWithRequest: (request: { url: string }) => request.url.startsWith(PLAYER_BASE_URL),
+            onOpenWindow: () => {},
+          }}
         />
       )}
     </View>
