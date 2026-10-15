@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/lib/auth-context'
@@ -29,7 +29,7 @@ export default function LoginScreen() {
       <View className="flex-1 justify-center px-6">
         <View className="bg-white rounded-2xl px-6 py-7 gap-4 shadow-lg">
           <View className="items-center gap-1 mb-2">
-            <Text className="text-4xl mb-1">🤟</Text>
+            <Image source={require('@/assets/images/kamay-aral-logo.png')} className="h-14 w-14 mb-1" resizeMode="contain" />
             <Text className="text-3xl font-black text-brand-brown">Kamay-Aral</Text>
             <Text className="text-sm text-gray-500 text-center">
               Your Partner in Learning Filipino Sign Language

@@ -85,7 +85,8 @@ export default function ModuleDetailScreen() {
       <View className="px-4 gap-4 pb-8">
         {mod.subModules.map((sm, idx) => {
           const attempt = attemptFor(sm.id)
-          const quizEnabled = quizEnabledIds.has(sm.id)
+          const hasSigns = sm.items.length > 0
+          const quizEnabled = hasSigns && quizEnabledIds.has(sm.id)
 
           return (
             <View key={sm.id} className="rounded-2xl bg-[#FDEFCA] p-5 gap-4">
@@ -96,20 +97,26 @@ export default function ModuleDetailScreen() {
                 <Text className="text-lg font-extrabold text-brand-brown">{sm.title}</Text>
               </View>
 
-              <View className="flex-row gap-3">
-                <Pressable
-                  onPress={() => router.push({ pathname: '/modules/[moduleId]/[submoduleId]/learn', params: { moduleId, submoduleId: sm.id, source } })}
-                  className="flex-1 flex-row items-center justify-center gap-1 rounded-xl bg-[#FCCF52] py-3"
-                >
-                  <Text className="text-brand-brown font-bold">📖 Learn</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push({ pathname: '/modules/[moduleId]/[submoduleId]/activity', params: { moduleId, submoduleId: sm.id, source } })}
-                  className="flex-1 flex-row items-center justify-center gap-1 rounded-xl bg-[#FFA93C] py-3"
-                >
-                  <Text className="text-white font-bold">🎮 Practice</Text>
-                </Pressable>
-              </View>
+              {hasSigns ? (
+                <View className="flex-row gap-3">
+                  <Pressable
+                    onPress={() => router.push({ pathname: '/modules/[moduleId]/[submoduleId]/learn', params: { moduleId, submoduleId: sm.id, source } })}
+                    className="flex-1 flex-row items-center justify-center gap-1 rounded-xl bg-[#FCCF52] py-3"
+                  >
+                    <Text className="text-brand-brown font-bold">📖 Learn</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => router.push({ pathname: '/modules/[moduleId]/[submoduleId]/activity', params: { moduleId, submoduleId: sm.id, source } })}
+                    className="flex-1 flex-row items-center justify-center gap-1 rounded-xl bg-[#FFA93C] py-3"
+                  >
+                    <Text className="text-white font-bold">🎮 Practice</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View className="flex-row items-center gap-1.5 rounded-xl bg-[#CFC2B5] px-3 py-2.5">
+                  <Text className="text-white">🔒 No signs yet</Text>
+                </View>
+              )}
 
               {quizEnabled && !attempt ? (
                 <Pressable

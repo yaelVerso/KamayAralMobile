@@ -53,6 +53,7 @@ export default function QuizScreen() {
       const sm = mod?.subModules.find((s) => s.id === submoduleId) ?? null
       if (cancelled || !sm) return
       setSubmodule(sm)
+      if (sm.items.length < 3) { setGate('not-enabled'); return }
 
       const { data: student } = await supabase.from('students').select('section_id').eq('id', userId).single()
       if (!student?.section_id) { setGate('not-enabled'); return }

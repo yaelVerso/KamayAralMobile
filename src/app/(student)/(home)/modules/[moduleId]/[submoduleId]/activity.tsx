@@ -137,6 +137,17 @@ export default function ActivityScreen() {
     )
   }
 
+  if (submodule.items.length === 0) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center px-6 gap-3">
+        <Text className="text-gray-500">Content not found.</Text>
+        <Pressable onPress={exit} className="mt-2 rounded-xl bg-[#0BC2D7] px-6 py-3">
+          <Text className="text-white font-bold">Go back</Text>
+        </Pressable>
+      </View>
+    )
+  }
+
   if (finished) {
     const percent = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 100
     return (
