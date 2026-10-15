@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native'
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, BackHandler } from 'react-native'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import type { SubModule } from '@/content/types'
 import { getModuleTreeBySource, type ContentSource } from '@/lib/moduleTree'
@@ -7,6 +7,7 @@ import { buildQuizSteps, getQuizQuestionCount, stepPoints, type QuizStep } from 
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { recordAuditLog } from '@/lib/bridge'
+import { useHideTabBar } from '@/lib/useHideTabBar'
 import SignToPicture from '@/components/activities/SignToPicture'
 import Spelling from '@/components/activities/Spelling'
 import DragDropMatch from '@/components/activities/DragDropMatch'
@@ -25,6 +26,7 @@ export default function QuizScreen() {
   const { moduleId, submoduleId, source } = useLocalSearchParams<{ moduleId: string; submoduleId: string; source: ContentSource }>()
   const { session } = useAuth()
   const router = useRouter()
+  useHideTabBar()
 
   const [submodule, setSubmodule] = useState<SubModule | null>(null)
   const [attemptId, setAttemptId] = useState<string | null>(null)
@@ -90,6 +92,17 @@ export default function QuizScreen() {
     load()
     return () => { cancelled = true }
   }, [moduleId, submoduleId, source, session?.user.id])
+
+  // Android hardware back press mid-quiz must go through the same "you'll
+  // lose your answers" prompt as the on-screen X button, not silently exit.
+  useEffect(() => {
+    if (!started || finished) return
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      setShowExitConfirm(true)
+      return true
+    })
+    return () => subscription.remove()
+  }, [started, finished])
 
   function beginQuiz() {
     if (!submodule) return
@@ -299,26 +312,26 @@ export default function QuizScreen() {
             })))}
           />
         )}
-      </ScrollView>
 
-      <View className="flex-row gap-3 px-4 pt-4 pb-6">
-        <Pressable
-          onPress={goPrevious}
-          disabled={stepIndex === 0}
-          className={`flex-1 rounded-xl border border-gray-200 py-3 items-center ${stepIndex === 0 ? 'opacity-40' : ''}`}
-        >
-          <Text className="font-semibold">← Previous</Text>
-        </Pressable>
-        <Pressable
-          onPress={goNext}
-          disabled={!currentAnswered || submitting}
-          className={`flex-1 rounded-xl bg-[#0BC2D7] py-3 items-center ${!currentAnswered || submitting ? 'opacity-40' : ''}`}
-        >
-          <Text className="text-white font-semibold">
-            {submitting ? 'Submitting…' : stepIndex === steps.length - 1 ? 'Finish' : 'Next →'}
-          </Text>
-        </Pressable>
-      </View>
+        <View className="flex-row gap-3 pt-4 pb-10">
+          <Pressable
+            onPress={goPrevious}
+            disabled={stepIndex === 0}
+            className={`flex-1 rounded-xl border border-gray-200 py-4 items-center ${stepIndex === 0 ? 'opacity-40' : ''}`}
+          >
+            <Text className="font-semibold text-base">← Previous</Text>
+          </Pressable>
+          <Pressable
+            onPress={goNext}
+            disabled={!currentAnswered || submitting}
+            className={`flex-1 rounded-xl bg-[#0BC2D7] py-4 items-center ${!currentAnswered || submitting ? 'opacity-40' : ''}`}
+          >
+            <Text className="text-white font-semibold text-base">
+              {submitting ? 'Submitting…' : stepIndex === steps.length - 1 ? 'Finish' : 'Next →'}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
 
       <Modal visible={showExitConfirm} transparent animationType="fade" onRequestClose={() => setShowExitConfirm(false)}>
         <View className="flex-1 bg-black/40 items-center justify-center px-6">

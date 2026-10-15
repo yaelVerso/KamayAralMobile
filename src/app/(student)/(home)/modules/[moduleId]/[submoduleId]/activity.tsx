@@ -6,6 +6,7 @@ import { getModuleTreeBySource, type ContentSource } from '@/lib/moduleTree'
 import { shuffle } from '@/lib/shuffle'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import { useHideTabBar } from '@/lib/useHideTabBar'
 import LessonCard from '@/components/activities/LessonCard'
 import SignToPicture from '@/components/activities/SignToPicture'
 import Spelling from '@/components/activities/Spelling'
@@ -23,16 +24,15 @@ interface Answer {
   is_correct: boolean
 }
 
-// interleaved per item: Lesson Card A -> Sign to Picture A -> Spelling A -> Lesson Card B -> ...
-// drag-drop-match is quiz-only, skipped here (mirrors web's buildActivitySteps).
+// interleaved per item: Sign to Picture A -> Spelling A -> Sign to Picture B -> ...
+// drag-drop-match is quiz-only, skipped here; lesson-card is Learn Mode only —
+// practice goes straight to testing, no re-teaching step (mirrors web's buildActivitySteps).
 function buildActivitySteps(submodule: SubModule, items: SignItem[]): ActivityStep[] {
-  const perItemTypes = submodule.activitySequence.filter((t) => t !== 'drag-drop-match')
+  const perItemTypes = submodule.activitySequence.filter((t) => t !== 'drag-drop-match' && t !== 'lesson-card')
   const steps: ActivityStep[] = []
   for (const item of items) {
     for (const type of perItemTypes) {
-      if (type === 'lesson-card') {
-        steps.push({ type, item })
-      } else if (type === 'sign-to-picture') {
+      if (type === 'sign-to-picture') {
         steps.push({ type, item, distractors: shuffle(items.filter((it) => it.id !== item.id)) })
       } else if (type === 'spelling') {
         steps.push({ type, item })
@@ -46,6 +46,7 @@ export default function ActivityScreen() {
   const { moduleId, submoduleId, source } = useLocalSearchParams<{ moduleId: string; submoduleId: string; source: ContentSource }>()
   const { session } = useAuth()
   const router = useRouter()
+  useHideTabBar()
 
   const [submodule, setSubmodule] = useState<SubModule | null>(null)
   const [loading, setLoading] = useState(true)
@@ -196,26 +197,26 @@ export default function ActivityScreen() {
             ])}
           />
         )}
-      </ScrollView>
 
-      <View className="flex-row gap-3 px-4 pt-4 pb-6">
-        <Pressable
-          onPress={goPrevious}
-          disabled={stepIndex === 0}
-          className={`flex-1 rounded-xl border border-gray-200 py-3 items-center ${stepIndex === 0 ? 'opacity-40' : ''}`}
-        >
-          <Text className="font-semibold">← Previous</Text>
-        </Pressable>
-        <Pressable
-          onPress={goNext}
-          disabled={!currentAnswered || submitting}
-          className={`flex-1 rounded-xl bg-[#0BC2D7] py-3 items-center ${!currentAnswered || submitting ? 'opacity-40' : ''}`}
-        >
-          <Text className="text-white font-semibold">
-            {submitting ? 'Submitting…' : stepIndex === steps.length - 1 ? 'Finish' : 'Next →'}
-          </Text>
-        </Pressable>
-      </View>
+        <View className="flex-row gap-3 pt-4 pb-10">
+          <Pressable
+            onPress={goPrevious}
+            disabled={stepIndex === 0}
+            className={`flex-1 rounded-xl border border-gray-200 py-4 items-center ${stepIndex === 0 ? 'opacity-40' : ''}`}
+          >
+            <Text className="font-semibold text-base">← Previous</Text>
+          </Pressable>
+          <Pressable
+            onPress={goNext}
+            disabled={!currentAnswered || submitting}
+            className={`flex-1 rounded-xl bg-[#0BC2D7] py-4 items-center ${!currentAnswered || submitting ? 'opacity-40' : ''}`}
+          >
+            <Text className="text-white font-semibold text-base">
+              {submitting ? 'Submitting…' : stepIndex === steps.length - 1 ? 'Finish' : 'Next →'}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
 
       <Modal visible={showExitConfirm} transparent animationType="fade" onRequestClose={() => setShowExitConfirm(false)}>
         <View className="flex-1 bg-black/40 items-center justify-center px-6">

@@ -50,7 +50,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      <View className="px-4 pt-8 pb-4 gap-6">
+      <View className="px-4 pt-16 pb-4 gap-6">
         <View className="flex-row items-center gap-4">
           <View className="h-16 w-16 rounded-full bg-indigo-100 items-center justify-center">
             <Text className="text-2xl font-bold text-indigo-600">{student.full_name?.[0]?.toUpperCase() ?? '?'}</Text>

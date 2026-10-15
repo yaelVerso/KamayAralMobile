@@ -4,6 +4,7 @@ import type { SignItem } from '@/content/types'
 import { labelTextSize } from '@/lib/utils'
 import { shuffle } from '@/lib/shuffle'
 import SignVideo from '@/components/shared/SignVideo'
+import SignImage from '@/components/shared/SignImage'
 
 interface Props {
   item: SignItem
@@ -65,11 +66,22 @@ export default function SignToPicture({ item, distractors, mode, initialAnswer, 
               key={choice.id}
               onPress={() => handleSelect(choice.id)}
               disabled={locked}
-              className={`w-[47%] items-center gap-2 rounded-2xl border-2 p-5 ${borderColor} ${bgColor}`}
+              className={`w-[47%] items-center justify-center gap-2 rounded-2xl border-2 p-5 ${borderColor} ${bgColor}`}
             >
-              <Text className={`${labelTextSize(choice.label, ['text-2xl', 'text-lg', 'text-base'])} font-black text-brand-secondary text-center`}>
-                {choice.label}
-              </Text>
+              {choice.imagePath ? (
+                <>
+                  <View className="h-20 w-full">
+                    <SignImage src={choice.imagePath} alt={choice.label} />
+                  </View>
+                  <Text className={`${labelTextSize(choice.label, ['text-xl', 'text-base', 'text-sm'])} font-bold text-center`}>
+                    {choice.label}
+                  </Text>
+                </>
+              ) : (
+                <Text className={`${labelTextSize(choice.label, ['text-2xl', 'text-lg', 'text-base'])} font-black text-brand-secondary text-center`}>
+                  {choice.label}
+                </Text>
+              )}
               {answered && isCorrect && <Text className="text-[#579F10] text-lg absolute right-2 top-2">✓</Text>}
               {answered && isSelected && !isCorrect && <Text className="text-[#C61518] text-lg absolute right-2 top-2">✕</Text>}
             </Pressable>

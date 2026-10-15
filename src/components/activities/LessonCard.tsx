@@ -2,6 +2,7 @@ import { View, Text } from 'react-native'
 import type { SignItem } from '@/content/types'
 import { labelTextSize } from '@/lib/utils'
 import SignVideo from '@/components/shared/SignVideo'
+import SignImage from '@/components/shared/SignImage'
 
 interface Props {
   item: SignItem
@@ -18,11 +19,18 @@ export default function LessonCard({ item }: Props) {
         <SignVideo videoPath={item.videoPath} />
       </View>
 
-      <View className="items-center gap-2 rounded-2xl bg-white border-2 border-gray-200 p-6">
-        <Text className={`${labelTextSize(item.label, ['text-5xl', 'text-3xl', 'text-2xl'])} font-black text-[#007B89] text-center`}>
-          {item.label}
-        </Text>
-        {item.labelFil && <Text className="text-base text-gray-500">{item.labelFil}</Text>}
+      <View className="flex-row items-center justify-center gap-4 rounded-2xl bg-white border-2 border-gray-200 p-6">
+        {item.imagePath && (
+          <View className="h-28 w-28 shrink-0">
+            <SignImage src={item.imagePath} alt={item.label} />
+          </View>
+        )}
+        <View className="items-center gap-2">
+          <Text className={`${labelTextSize(item.label, ['text-5xl', 'text-3xl', 'text-2xl'])} font-black text-[#007B89] text-center`}>
+            {item.label}
+          </Text>
+          {item.labelFil && <Text className="text-base text-gray-500">{item.labelFil}</Text>}
+        </View>
       </View>
     </View>
   )

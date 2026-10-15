@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
-import { resolveLoginEmail, recordFailedLogin, recordAuditLog } from './bridge'
+import { resolveLoginEmail, recordFailedLogin, recordAuditLog, checkLoginLockout } from './bridge'
+import { formatLockoutDuration } from './loginLockout'
 
 interface AuthContextValue {
   session: Session | null
@@ -30,6 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function signIn(identifier: string, password: string): Promise<{ error?: string }> {
+    const lockout = await checkLoginLockout(identifier)
+    if (lockout.locked) {
+      const seconds = lockout.retryAfterSeconds ?? 60
+      return { error: `Too many failed attempts. Try again in ${formatLockoutDuration(seconds)}.` }
+    }
+
     const resolved = await resolveLoginEmail(identifier)
     if ('error' in resolved) {
       await recordFailedLogin(identifier)

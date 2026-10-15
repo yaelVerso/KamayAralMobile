@@ -10,6 +10,7 @@ import { labelTextSize } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import YoutubePlayer, { type PlayerStateName } from '@/components/shared/YoutubePlayer'
+import SignImage from '@/components/shared/SignImage'
 
 const SPEEDS = [0.5, 0.75, 1] as const
 
@@ -199,11 +200,18 @@ export default function LearnScreen() {
             ))}
         </View>
 
-        <View className="items-center gap-2 rounded-2xl bg-white border-2 border-gray-200 p-6 mt-4">
-          <Text className={`${labelTextSize(selectedItem.label, ['text-5xl', 'text-3xl', 'text-2xl'])} font-black text-[#007B89] text-center`}>
-            {selectedItem.label}
-          </Text>
-          {selectedItem.labelFil && <Text className="text-base text-gray-500">{selectedItem.labelFil}</Text>}
+        <View className="flex-row items-center justify-center gap-4 rounded-2xl bg-white border-2 border-gray-200 p-6 mt-4">
+          {selectedItem.imagePath && (
+            <View className="h-32 w-32 shrink-0">
+              <SignImage src={selectedItem.imagePath} alt={selectedItem.label} />
+            </View>
+          )}
+          <View className="items-center gap-2">
+            <Text className={`${labelTextSize(selectedItem.label, ['text-5xl', 'text-3xl', 'text-2xl'])} font-black text-[#007B89] text-center`}>
+              {selectedItem.label}
+            </Text>
+            {selectedItem.labelFil && <Text className="text-base text-gray-500">{selectedItem.labelFil}</Text>}
+          </View>
         </View>
 
         <View className="flex-row gap-3 mt-4 mb-8">

@@ -42,6 +42,10 @@ export function resolveLoginEmail(identifier: string) {
   return postJson<{ email: string } | { error: string }>('/api/mobile/resolve-login-email', { identifier })
 }
 
+export function checkLoginLockout(identifier: string) {
+  return postJson<{ locked: boolean; retryAfterSeconds?: number }>('/api/mobile/check-login-lockout', { identifier })
+}
+
 export function recordFailedLogin(identifier: string) {
   return postJson<{ ok: boolean }>('/api/mobile/record-failed-login', { identifier })
 }

@@ -3,6 +3,7 @@ import { View, Text, Pressable } from 'react-native'
 import type { SignItem } from '@/content/types'
 import { shuffle } from '@/lib/shuffle'
 import SignVideo from '@/components/shared/SignVideo'
+import SignImage from '@/components/shared/SignImage'
 
 interface MatchResult {
   itemId: string
@@ -159,7 +160,16 @@ export default function DragDropMatch({ items, mode, initialMatches, onAnswer }:
                 disabled={locked}
                 className={`aspect-video items-center justify-center rounded-xl border-2 p-2 ${borderColor} ${bg}`}
               >
-                <Text className="font-black text-brand-secondary text-center text-xl">{item.label}</Text>
+                {item.imagePath ? (
+                  <>
+                    <View className="min-h-0 w-full flex-1">
+                      <SignImage src={item.imagePath} alt={item.label} />
+                    </View>
+                    <Text className="font-bold text-center text-sm mt-1">{item.label}</Text>
+                  </>
+                ) : (
+                  <Text className="font-black text-brand-secondary text-center text-xl">{item.label}</Text>
+                )}
               </Pressable>
             )
           })}

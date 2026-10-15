@@ -69,7 +69,7 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      <View className="px-4 pt-6 pb-4">
+      <View className="px-4 pt-14 pb-4">
         <Text className="text-sm text-gray-500">Welcome back,</Text>
         <Text className="text-2xl font-black text-brand-brown">{studentName ?? 'Student'} 👋</Text>
       </View>
