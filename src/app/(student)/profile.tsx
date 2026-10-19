@@ -84,7 +84,7 @@ export default function ProfileScreen() {
         </View>
 
         <Pressable onPress={signOut} className="rounded-xl bg-[#E14E4E] py-3.5 items-center mt-2">
-          <Text className="text-white font-bold">Log Out</Text>
+          <Text className="text-white font-bold">Sign out</Text>
         </Pressable>
       </View>
     </ScrollView>
