@@ -70,10 +70,6 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <Pressable onPress={() => router.push('/forgot-password')} className="items-end -mt-1">
-            <Text className="text-brand-secondary font-semibold text-sm">Forgot password?</Text>
-          </Pressable>
-
           {error && <Text className="text-red-600 text-sm text-center">{error}</Text>}
 
           <Pressable
@@ -82,6 +78,10 @@ export default function LoginScreen() {
             className="bg-brand-primary rounded-xl py-4 items-center disabled:opacity-50"
           >
             {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Sign in</Text>}
+          </Pressable>
+
+          <Pressable onPress={() => router.push('/forgot-password')} className="items-center">
+            <Text className="text-brand-secondary font-semibold text-sm">Forgot password?</Text>
           </Pressable>
 
           <Text className="text-center text-xs text-gray-400">Accounts are created by admin.</Text>

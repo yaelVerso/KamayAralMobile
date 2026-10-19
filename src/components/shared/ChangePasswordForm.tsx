@@ -52,24 +52,11 @@ export default function ChangePasswordForm() {
     <View className="gap-3">
       <View className="gap-1.5">
         <Text className="text-sm font-medium text-gray-700">Current Password</Text>
-        <TextInput
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-          placeholder="Enter current password"
-          secureTextEntry={!showPass}
-          autoCapitalize="none"
-          autoCorrect={false}
-          className="border border-gray-300 rounded-xl px-4 py-3 text-base"
-        />
-      </View>
-
-      <View className="gap-1.5">
-        <Text className="text-sm font-medium text-gray-700">New Password</Text>
         <View className="relative justify-center">
           <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder={PASSWORD_PLACEHOLDER}
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            placeholder="Enter current password"
             secureTextEntry={!showPass}
             autoCapitalize="none"
             autoCorrect={false}
@@ -79,6 +66,19 @@ export default function ChangePasswordForm() {
             <Ionicons name={showPass ? 'eye-off' : 'eye'} size={20} color="#9ca3af" />
           </Pressable>
         </View>
+      </View>
+
+      <View className="gap-1.5">
+        <Text className="text-sm font-medium text-gray-700">New Password</Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder={PASSWORD_PLACEHOLDER}
+          secureTextEntry={!showPass}
+          autoCapitalize="none"
+          autoCorrect={false}
+          className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+        />
         <Text className="text-xs text-gray-500">{PASSWORD_HINT}</Text>
       </View>
 
